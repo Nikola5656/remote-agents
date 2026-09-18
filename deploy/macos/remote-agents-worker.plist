@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template only — install-macos.sh writes the live plist with resolved paths. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.remote-agents.worker</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/node</string>
+    <string>/path/to/remote-agents/apps/worker/dist/index.js</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/path/to/remote-agents</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ProcessType</key>
+  <string>Interactive</string>
+  <key>StandardOutPath</key>
+  <string>${HOME}/.local/share/remote-agents-worker/logs/worker.log</string>
+  <key>StandardErrorPath</key>
+  <string>${HOME}/.local/share/remote-agents-worker/logs/worker.err.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>WORKER_SANDBOX</key>
+    <string>disabled</string>
+    <key>WORKER_FORCE</key>
+    <string>1</string>
+    <key>WORKER_DATA_DIR</key>
+    <string>${HOME}/.local/share/remote-agents-worker</string>
+  </dict>
+</dict>
+</plist>

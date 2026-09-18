@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist-test",
+    "rootDir": "src",
+    "declaration": false,
+    "esModuleInterop": true,
+    "paths": {
+      "@remote-agents/shared": [
+        "../../packages/shared/dist/index.d.ts"
+      ]
+    },
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src/live-refresh.ts",
+    "src/live-refresh.test.ts",
+    "src/api.ts",
+    "src/api.test.ts",
+    "src/provider-selection.test.ts",
+    "src/execution.ts",
+    "src/execution.test.ts",
+    "src/format.ts",
+    "src/format.test.ts",
+    "src/activity.ts",
+    "src/activity.test.ts",
+    "src/documents.ts",
+    "src/documents.test.ts",
+    "src/markdown-render.test.tsx",
+    "src/components/MarkdownRenderBoundary.tsx",
+    "src/components/MarkdownViewer.tsx",
+    "src/reader-dialog.ts",
+    "src/reader-dialog.test.ts",
+    "src/auth-return.ts",
+    "src/auth-return.test.ts"
+  ]
+}

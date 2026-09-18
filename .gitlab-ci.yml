@@ -1,0 +1,200 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+stages:
+  - validate
+  - test
+  - package
+
+variables:
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  SERVER_URL: "https://example.test"
+  WORKER_TOKEN: "ci-smoke-token"
+
+default:
+  image: node:22.13.1-bookworm-slim
+  interruptible: true
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+
+dependency-audit:
+  stage: validate
+  script:
+    - node scripts/assert-node-version.mjs 22.13.0 gitlab-ci
+    - npm --version | grep -Fx '10.9.2'
+    - npm ci --ignore-scripts --no-audit --no-fund
+    - npm ls --omit=dev
+    - npm audit --omit=dev --audit-level=low
+
+secret-scan:
+  stage: validate
+  cache: []
+  script:
+    - |
+      node <<'NODE'
+      const fs = require("node:fs");
+      const path = require("node:path");
+
+      const ignored = new Set([".git", ".npm", "node_modules", "dist", "build", "coverage", "release"]);
+      const forbiddenNames = [
+        /^\.env(?:\..+)?$/,
+        /\.credentials\.json$/,
+        /^(?:credentials\.json|\.cursor-api-key)$/,
+        /\.(?:pem|key)$/,
+      ];
+      const allowedEnvExamples = new Set([".env.example", "deploy/env.server.example"]);
+      const signatures = [
+        [/-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/, "private key"],
+        [/\bAKIA[0-9A-Z]{16}\b/, "AWS access key"],
+        [/\bgh[pousr]_[A-Za-z0-9]{36,255}\b/, "GitHub token"],
+        [/\bxox[baprs]-[A-Za-z0-9-]{20,}\b/, "Slack token"],
+        [/\bsk-[A-Za-z0-9_-]{32,}\b/, "API key"],
+      ];
+      const findings = [];
+
+      function walk(dir) {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          if (ignored.has(entry.name)) continue;
+          const file = path.join(dir, entry.name);
+          const rel = path.relative(process.cwd(), file).split(path.sep).join("/");
+          if (entry.isDirectory()) {
+            walk(file);
+            continue;
+          }
+          if (!entry.isFile()) continue;
+          if (!allowedEnvExamples.has(rel) && forbiddenNames.some((pattern) => pattern.test(entry.name))) {
+            findings.push(`${rel}: forbidden secret filename`);
+          }
+          const data = fs.readFileSync(file);
+          if (data.includes(0)) continue;
+          const text = data.toString("utf8");
+          for (const [pattern, label] of signatures) {
+            if (pattern.test(text)) findings.push(`${rel}: possible ${label}`);
+          }
+        }
+      }
+
+      walk(process.cwd());
+      if (findings.length) {
+        console.error(findings.join("\n"));
+        process.exit(1);
+      }
+      console.log("secret-scan: no high-confidence findings");
+      NODE
+
+clean-linux-build-test:
+  stage: test
+  script:
+    - node scripts/assert-node-version.mjs 22.13.0 gitlab-ci
+    - npm --version | grep -Fx '10.9.2'
+    - apt-get update && apt-get install -y --no-install-recommends python3 git procps rsync
+    - npm ci --no-audit --no-fund
+    - npm ls --omit=dev
+    - npm run build
+    - npm test
+    - node scripts/smoke-preflight.mjs
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - apps/server/dist/
+      - apps/web/dist/
+      - apps/worker/dist/
+      - packages/shared/dist/
+
+# Linux mock coverage only; native Windows/WSL acceptance remains a separate gate.
+powershell-wsl-mocks:
+  stage: test
+  image:
+    name: mcr.microsoft.com/powershell:7.4-ubuntu-22.04@sha256:62300a213a9293916333df2b014cd3a8f22fb0b0b65f2bb446aaf436bcf8c868
+    entrypoint: [""]
+  cache: []
+  timeout: 5m
+  script:
+    - pwsh -NoLogo -NoProfile -NonInteractive -File scripts/test-wsl-helpers.ps1
+
+# Operator-triggered native Windows run on GitLab's hosted Windows 2022 runner
+# (beta). GCE permits only Linux KVM as an L1 hypervisor, so WSL2 cannot run on
+# these VMs; the probe therefore reports UNVERIFIED for WSL and only the 22
+# helper assertions gate the job. Uses no provider secrets.
+windows-native-gate:
+  inherit:
+    default: false
+  interruptible: true
+  stage: test
+  tags:
+    - saas-windows-medium-amd64
+  rules:
+    - when: manual
+      allow_failure: true
+  cache: []
+  timeout: 15m
+  script:
+    - |
+      $pwshCommand = Get-Command pwsh -ErrorAction SilentlyContinue
+      if ($pwshCommand) {
+        $pwshPath = $pwshCommand.Source
+      } else {
+        choco install powershell-core -y --no-progress | Out-Null
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        $pwshPath = Join-Path $env:ProgramFiles 'PowerShell/7/pwsh.exe'
+        if (-not (Test-Path $pwshPath)) { throw 'PowerShell 7 installation did not provide pwsh.exe' }
+      }
+      New-Item -ItemType Directory -Force -Path evidence | Out-Null
+      & $pwshPath -NoLogo -NoProfile -NonInteractive -File scripts/test-wsl-helpers.ps1 2>&1 | Tee-Object -FilePath evidence/windows-helpers.txt
+      $helperExit = $LASTEXITCODE
+      & $pwshPath -NoLogo -NoProfile -NonInteractive -File scripts/probe-windows-capabilities.ps1 -OutFile evidence/windows-probe.txt
+      $probeExit = $LASTEXITCODE
+      if ($helperExit -ne 0) { exit $helperExit }
+      if ($probeExit -ne 0) { exit $probeExit }
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - evidence/windows-helpers.txt
+      - evidence/windows-probe.txt
+
+deployment-templates:
+  stage: test
+  image: node:22.13.1-bookworm
+  cache: []
+  script:
+    - apt-get update && apt-get install -y --no-install-recommends gettext-base python3
+    - export REMOTE_AGENTS_DOMAIN=ci.example.test REMOTE_AGENTS_PORT=3847 REMOTE_AGENTS_ACME_ROOT=/var/www/remote-acme
+    - bash deploy/render-nginx-template.sh http-only /tmp/nginx-http.conf
+    - grep -q ci.example.test /tmp/nginx-http.conf
+    - grep -q '\$host' /tmp/nginx-http.conf
+    - python3 apps/worker/scripts/systemd-serialize.py server-unit --template deploy/systemd/remote-agents.service.template --output /tmp/remote-agents.service --install-dir /opt/remote-agents --state-dir /var/lib/remote-agents --service-user www-data
+    - grep -q 'ExecStart=/usr/bin/node /opt/remote-agents/apps/server/dist/index.js' /tmp/remote-agents.service
+
+release-artifact:
+  stage: package
+  needs:
+    - job: clean-linux-build-test
+      artifacts: true
+    - job: dependency-audit
+    - job: secret-scan
+    - job: deployment-templates
+    - job: powershell-wsl-mocks
+  cache: []
+  script:
+    - command -v tar >/dev/null
+    - command -v npm >/dev/null
+    - command -v npx >/dev/null
+    - npm --version | grep -Fx '10.9.2'
+    - node scripts/package-release.mjs
+    - test -f "release/remote-agents-${CI_COMMIT_SHA}.tgz"
+    - test -f "release/remote-agents-${CI_COMMIT_SHA}.tgz.sha256"
+    - node scripts/validate-release-artifact.mjs "release/remote-agents-${CI_COMMIT_SHA}.tgz" "release/remote-agents-${CI_COMMIT_SHA}.tgz.sha256"
+  artifacts:
+    name: "remote-agents-$CI_COMMIT_SHA"
+    expire_in: 14 days
+    paths:
+      - release/*.tgz
+      - release/*.sha256

@@ -1,0 +1,56 @@
+/* Documents have their own reading surface; selectors stay scoped to this feature. */
+.doc-workspace { gap: 18px; }
+.doc-workspace .feed__head { align-items: flex-start; }
+.doc-intro { font-size: 13px; line-height: 1.6; margin-top: 5px; }
+.doc-workspace .doc-panes--browse { grid-template-columns: minmax(0, 1fr); }
+.doc-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.doc-filters input { flex: 1 1 180px; font-size: 16px; }
+.doc-filters select, .doc-reader__tools select { min-height: 44px; min-width: 0; max-width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; color: var(--fg); background: var(--bg); font-size: 14px; }
+.doc-list-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+.doc-list-options label { display: flex; align-items: center; gap: 7px; min-height: 44px; cursor: pointer; color: var(--muted); }
+.doc-list-options input { width: 18px; height: 18px; accent-color: var(--accent); }
+.doc-workspace .doc-files { max-height: none; overflow: visible; gap: 8px; }
+.doc-workspace .md-file { padding: 13px 14px; gap: 5px; min-height: 82px; }
+.doc-workspace .md-file__name { font-family: var(--font-body); font-size: 15px; font-weight: 600; line-height: 1.4; }
+.doc-file-path { color: var(--muted); font: 11px/1.5 var(--font-mono); overflow-wrap: anywhere; }
+.doc-workspace .doc-file-path { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.doc-search-hint { font-size: 12px; line-height: 1.6; }
+.doc-create, .doc-location { border-top: 1px solid var(--border); }
+.doc-create > summary, .doc-location > summary { cursor: pointer; min-height: 48px; padding-block: 14px; font-size: 13px; color: var(--fg-2); }
+.doc-create .md-ws__ask { border: 0; padding-top: 6px; }
+.doc-location .md-ws__root { padding-bottom: 12px; }
+.doc-reader { align-self: start; }
+.doc-reader .md-viewer__header { padding: 12px 16px; }
+.doc-reader__navigation { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.doc-reader__navigation .btn { min-height: 44px; padding: 10px 16px; border-radius: 10px; font-size: 14px; }
+.doc-reader__title { margin-top: 5px; font-size: 19px; line-height: 1.35; overflow-wrap: anywhere; }
+.doc-reader .md-viewer__meta { margin-top: 5px; }
+.doc-reader__tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 10px; margin-top: 12px; }
+.doc-reader__options { position: relative; min-width: 0; }
+.doc-reader__options > summary { cursor: pointer; padding: 10px 14px; font-size: 14px; line-height: 22px; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-warm); }
+.doc-reader__options > div { position: absolute; z-index: 3; right: 0; top: 100%; width: min(260px, 75vw); padding: 10px; display: grid; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 30px #0008; }
+.doc-reader__options .btn { white-space: normal; text-align: left; justify-content: start; }
+.doc-reader .md-view { max-width: 76ch; margin-inline: auto; font-size: 16px; line-height: 1.85; }
+.doc-reader .md-view :is(h1,h2,h3) { scroll-margin-top: 20px; }
+.doc-reader .md-view :is(pre,table,img) { max-width: 100%; }
+.doc-reader .md-view pre { white-space: pre; overflow-x: auto; }
+.doc-reader .md-view .md-table-scroll { max-width: 100%; overflow-x: auto; }
+.doc-reader .md-viewer__content { overscroll-behavior: contain; }
+.doc-reader.md-viewer--expanded .md-viewer__header { padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
+.doc-reader.md-viewer--expanded .md-viewer__content { padding: 24px max(18px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+@media (min-width: 1000px) {
+  .doc-workspace .doc-panes--browse .doc-files { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .doc-workspace .doc-panes--reading { grid-template-columns: minmax(220px, .8fr) minmax(0, 2fr); gap: 20px; }
+  .doc-workspace .doc-panes--reading .doc-files { max-height: 65dvh; overflow: auto; }
+  .doc-reader.md-viewer--expanded .md-viewer__header { padding-inline: max(28px, calc((100vw - 1100px) / 2)); }
+}
+@media (max-width: 767px) {
+  .doc-workspace { padding: 14px; }
+  .doc-workspace .md-ws__panes { grid-template-columns: minmax(0, 1fr); }
+  .doc-reader .md-viewer__content { max-height: 72dvh; }
+  .doc-reader.md-viewer--expanded .md-viewer__content { max-height: none; }
+  .doc-reader .md-view { font-size: 16px; line-height: 1.8; }
+  .doc-reader__title { font-size: 18px; }
+  .doc-reader .md-view h1 { font-size: 26px; }
+  .doc-reader .md-view h2 { font-size: 22px; }
+}

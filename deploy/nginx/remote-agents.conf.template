@@ -1,0 +1,71 @@
+# Render with envsubst. Required: REMOTE_AGENTS_DOMAIN REMOTE_AGENTS_PORT REMOTE_AGENTS_ACME_ROOT
+
+upstream remote_agents_app {
+    server 127.0.0.1:${REMOTE_AGENTS_PORT};
+    keepalive 8;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${REMOTE_AGENTS_DOMAIN};
+
+    access_log /var/log/nginx/remote_agents_http.access.log;
+    error_log  /var/log/nginx/remote_agents_http.error.log;
+
+    location /.well-known/acme-challenge/ {
+        root ${REMOTE_AGENTS_ACME_ROOT};
+        default_type text/plain;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name ${REMOTE_AGENTS_DOMAIN};
+
+    ssl_certificate     /etc/letsencrypt/live/${REMOTE_AGENTS_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${REMOTE_AGENTS_DOMAIN}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    access_log /var/log/nginx/remote_agents.access.log;
+    error_log  /var/log/nginx/remote_agents.error.log;
+
+    client_max_body_size 8m;
+    server_tokens off;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header X-Frame-Options DENY always;
+
+    location /ws/ {
+        proxy_pass http://remote_agents_app;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+        proxy_buffering off;
+    }
+
+    location / {
+        proxy_pass http://remote_agents_app;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Connection "";
+        proxy_read_timeout 120s;
+    }
+}

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "agents": [
+    { "id": "workspace-cursor", "name": "Workspace", "provider": "cursor", "defaultModel": "composer-2.5", "cwd": "../workspaces/workspace" },
+    { "id": "research", "name": "Research", "provider": "codex", "defaultModel": "gpt-6-astra", "cwd": "~/remote-agent-workspaces/research" },
+    { "id": "claude-review", "name": "Claude Review", "provider": "claude", "defaultModel": "claude-code:claude-opus-5", "kind": "claude", "cwd": "../workspaces/review" }
+  ]
+}

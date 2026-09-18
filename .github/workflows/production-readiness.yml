@@ -1,0 +1,71 @@
+name: production-readiness
+
+on:
+  push:
+    branches: [main, "codex/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-build:
+    name: test-build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: ["22.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: clean install smoke
+        run: node scripts/smoke-clean-install.mjs
+        env:
+          SERVER_URL: https://example.test
+          WORKER_TOKEN: ci-smoke-token
+
+  windows-wsl-validation:
+    name: windows-wsl (build via WSL2 Ubuntu)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: WSL helper regression tests
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/test-wsl-helpers.ps1
+      - name: WSL Ubuntu clean build + tests (not native Windows)
+        shell: pwsh
+        run: pwsh scripts/run-wsl-validation.ps1
+        env:
+          SERVER_URL: https://example.test
+          WORKER_TOKEN: ci-smoke-token
+      - name: upload WSL evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wsl-validation-evidence
+          path: evidence/wsl-validation-*/
+          if-no-files-found: ignore
+
+  compose-config:
+    name: server-compose-templates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: render nginx template
+        run: |
+          export REMOTE_AGENTS_DOMAIN=ci.example.test
+          export REMOTE_AGENTS_PORT=3847
+          export REMOTE_AGENTS_ACME_ROOT=/var/www/remote-acme
+          bash deploy/render-nginx-template.sh http-only /tmp/nginx-http.conf
+          grep -q ci.example.test /tmp/nginx-http.conf
+          grep -q '\$host' /tmp/nginx-http.conf
+      - name: render systemd template
+        run: |
+          python3 apps/worker/scripts/systemd-serialize.py server-unit --template deploy/systemd/remote-agents.service.template --output /tmp/remote-agents.service --install-dir /opt/remote-agents --state-dir /var/lib/remote-agents --service-user www-data
+          grep -q ExecStart /tmp/remote-agents.service

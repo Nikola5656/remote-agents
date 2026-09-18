@@ -1,0 +1,23 @@
+[Unit]
+Description=Remote Cursor agents control API
+After=network.target nginx.service
+
+[Service]
+Type=simple
+User={{REMOTE_AGENTS_SERVICE_USER}}
+Group={{REMOTE_AGENTS_SERVICE_USER}}
+WorkingDirectory={{REMOTE_AGENTS_INSTALL_DIR_QUOTED}}
+{{REMOTE_AGENTS_NODE_PATH_ENV}}
+EnvironmentFile={{REMOTE_AGENTS_ENV_FILE_QUOTED}}
+ExecStart=/usr/bin/node {{REMOTE_AGENTS_SERVER_JS_QUOTED}}
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths={{REMOTE_AGENTS_STATE_DIR_QUOTED}}
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,4 @@
+# Keep scripts executable in Linux/WSL after a Windows checkout.
+* text=auto eol=lf
+*.jpg binary
+*.png binary

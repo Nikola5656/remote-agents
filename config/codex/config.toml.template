@@ -1,0 +1,6 @@
+# Merge into the worker user's ~/.codex/config.toml for manual CLI use.
+# The remote runtime also sets these policies explicitly per turn.
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
+model = "gpt-6-astra"
+model_reasoning_effort = "medium"

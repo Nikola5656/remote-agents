@@ -1,0 +1,6 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawnSync}=require('node:child_process');
+test('secret generation is private, hostname-independent, and never overwrites existing credentials',()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ra-secrets-'));const out=path.join(dir,'server.env');
+ const run=()=>spawnSync(process.execPath,[path.join(__dirname,'gen-secrets.js'),out],{encoding:'utf8',env:{...process.env,APP_USERNAME:'admin',APP_PASSWORD:'test-only-password',PUBLIC_ORIGIN:'https://agents.example.test'}});
+ try{const first=run();assert.equal(first.status,0,first.stderr);const env=fs.readFileSync(out,'utf8');const credentials=JSON.parse(fs.readFileSync(out+'.credentials.json','utf8'));assert.equal(credentials.password,'test-only-password');assert.ok(!env.includes('APP_PASSWORD='));assert.ok(env.includes('PUBLIC_ORIGIN=https://agents.example.test'));assert.ok(!first.stdout.includes(credentials.password));const token=env.match(/WORKER_TOKEN=(.+)/)[1];assert.ok(!first.stdout.includes(token));if(process.platform!=='win32')assert.equal(fs.statSync(out).mode&0o777,0o600);assert.notEqual(run().status,0);assert.equal(fs.readFileSync(out,'utf8'),env);}finally{fs.rmSync(dir,{recursive:true,force:true})}
+});

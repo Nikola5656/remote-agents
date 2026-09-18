@@ -1,0 +1,35 @@
+{
+  "name": "remote-agents",
+  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Remote control for Cursor, Codex, and Claude Code agents with a mobile-first HTTPS dashboard.",
+  "workspaces": [
+    "packages/shared",
+    "apps/server",
+    "apps/web",
+    "apps/worker"
+  ],
+  "scripts": {
+    "build": "npm run build -w @remote-agents/shared && npm run build -w @remote-agents/web && npm run build -w @remote-agents/server && npm run build -w @remote-agents/worker",
+    "test": "npm run test -w @remote-agents/shared && npm run test -w @remote-agents/server && npm run test -w @remote-agents/worker && npm run test -w @remote-agents/web && node --test scripts/gen-secrets.test.cjs scripts/server-worker.integration.test.cjs scripts/worker-installer.test.cjs scripts/installer-systemd.test.cjs scripts/rollback-server.test.cjs",
+    "package:release": "node scripts/package-release.mjs",
+    "dev:server": "npm run dev -w @remote-agents/server",
+    "dev:web": "npm run dev -w @remote-agents/web",
+    "dev:worker": "npm run dev -w @remote-agents/worker"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "@connectrpc/connect-node": {
+      "undici": "6.28.1"
+    },
+    "qs": "6.16.0"
+  },
+  "packageManager": "npm@10.9.2"
+}

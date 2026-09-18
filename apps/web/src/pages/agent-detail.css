@@ -1,0 +1,53 @@
+/* Agent detail keeps reading, document discovery and configuration separate. */
+.page--detail.agent-detail { gap: 16px; width: 100%; max-width: 980px; }
+.detail-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.detail-heading__back { display: grid; place-items: center; flex: 0 0 44px; height: 44px; border: 1px solid var(--border); border-radius: 12px; font-size: 30px; color: var(--fg-2); }
+.detail-heading__identity { min-width: 0; }
+.detail-heading h1 { font-size: clamp(23px, 4vw, 30px); }
+.detail-heading p { margin-top: 4px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.run-summary { display: grid; gap: 8px; padding: 0 0 4px; min-width: 0; }
+.run-summary__meta { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 12px; color: var(--muted); }
+.run-summary p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.run-summary--attention p { color: var(--warn); }
+.run-summary > button { justify-self: start; }
+.detail-tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; background: var(--bg); padding: 4px 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 8; }
+.detail-tabs button { border-radius: 9px; background: transparent; font-size: 14px; color: var(--muted); min-width: 0; }
+.detail-tabs button[aria-selected="true"] { background: #b3efcd12; color: var(--accent); box-shadow: inset 0 -2px var(--accent); }
+.detail-panel { display: grid; gap: 16px; min-width: 0; }
+.detail-panel[hidden] { display: none; }
+.detail-actions { display: grid; gap: 16px; min-width: 0; align-content: start; }
+.detail-compose .message-box { margin-top: 10px; }
+.detail-compose .message-box__input { min-height: 82px; }
+.detail-compose .message-box__actions { display: flex; flex-wrap: wrap; }
+.detail-compose .message-box__actions > button { flex: 1; }
+.detail-compose__hint { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 10px; }
+.message-box__receipt { color: var(--success); font-size: 13px; line-height: 1.5; }
+.detail-settings__section { display: grid; gap: 14px; align-content: start; }
+.detail-settings__section > p { font-size: 13px; line-height: 1.6; }
+.detail-settings__section select, .detail-settings__section input { min-width: 0; width: 100%; }
+.detail-settings__section > button { justify-self: start; }
+.detail-queue .queue-list { margin: 0; padding: 0; list-style: none; }
+.detail-queue p { overflow-wrap: anywhere; font-size: 14px; }
+.detail-queue__item { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.detail-queue .queue-list > li + li { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.detail-stop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.detail-stop span { font-size: 12px; line-height: 1.6; }
+.detail-run-id { overflow-wrap: anywhere; font-size: 12px; }
+@media (min-width: 760px) {
+  .detail-settings { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; }
+  .detail-settings > details { grid-column: 1/-1; }
+}
+@media (max-width: 380px) {
+  .run-summary__updated { display: none; }
+  .detail-compose .message-box__actions { flex-direction: column; }
+}
+
+.agent-detail, .md-dialog { color-scheme: dark; }
+
+@media (min-width: 1100px) {
+  .page--detail.agent-detail { max-width: 1120px; }
+  .detail-panel--activity { grid-template-columns: minmax(0, 1fr) 320px; align-items: start; }
+  .detail-actions { position: sticky; top: 76px; }
+  .detail-compose .message-box__input { min-height: 144px; }
+  .detail-compose .message-box__actions { flex-direction: column; }
+}

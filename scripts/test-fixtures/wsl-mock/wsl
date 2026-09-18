@@ -1,0 +1,4 @@
+#!/bin/sh
+# Linux/macOS shim so `wsl` resolves on PATH; behaviour lives in wsl-mock.ps1.
+dir=$(dirname "$0")
+exec pwsh -NoProfile -NonInteractive -File "$dir/wsl-mock.ps1" "$@"

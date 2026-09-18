@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "agents": [
+    {
+      "id": "agent-1",
+      "name": "Agent 1",
+      "defaultModel": "grok-4.6",
+      "provider": "cursor",
+      "kind": "core"
+    },
+    {
+      "id": "agent-2",
+      "name": "Agent 2",
+      "defaultModel": "grok-4.6",
+      "provider": "cursor",
+      "kind": "core"
+    },
+    {
+      "id": "agent-3",
+      "name": "Agent 3",
+      "defaultModel": "composer-2.5",
+      "provider": "cursor",
+      "kind": "core"
+    },
+    {
+      "id": "codex-astra-1",
+      "name": "Astra 1",
+      "defaultModel": "gpt-6-astra",
+      "provider": "codex",
+      "kind": "extra"
+    },
+    {
+      "id": "codex-astra-2",
+      "name": "Astra 2",
+      "defaultModel": "gpt-6-astra",
+      "provider": "codex",
+      "kind": "extra"
+    },
+    {
+      "id": "codex-sol-1",
+      "name": "Sol",
+      "defaultModel": "gpt-5.6-sol",
+      "provider": "codex",
+      "kind": "extra"
+    },
+    {
+      "id": "extra-1",
+      "name": "Research",
+      "provider": "cursor",
+      "defaultModel": "composer-2.5",
+      "kind": "extra"
+    },
+    {
+      "id": "claude-fable-5-1",
+      "name": "Claude Fable 5.1",
+      "provider": "claude",
+      "defaultModel": "claude-code:claude-fable-5-1",
+      "kind": "claude"
+    },
+    {
+      "id": "claude-fable-5",
+      "name": "Claude Fable 5",
+      "provider": "claude",
+      "defaultModel": "claude-code:claude-fable-5",
+      "kind": "claude"
+    },
+    {
+      "id": "claude-opus-5",
+      "name": "Claude Opus 5",
+      "provider": "claude",
+      "defaultModel": "claude-code:claude-opus-5",
+      "kind": "claude"
+    },
+    {
+      "id": "claude-opus-4-8",
+      "name": "Claude Opus 4.8",
+      "provider": "claude",
+      "defaultModel": "claude-code:claude-opus-4-8",
+      "kind": "claude"
+    }
+  ]
+}

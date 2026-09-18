@@ -1,0 +1,24 @@
+[Unit]
+Description=Remote Cursor agents control API
+After=network.target nginx.service
+# Isolated from WordPress / PHP / MySQL / Cockpit
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/remote-agents
+Environment=NODE_PATH=/opt/remote-agents/node_modules
+EnvironmentFile=/opt/remote-agents/.env
+ExecStart=/usr/bin/node /opt/remote-agents/apps/server/dist/index.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/remote-agents/apps/server/data
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
